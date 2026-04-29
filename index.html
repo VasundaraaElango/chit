@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChitTrack Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --bg:#f4f6f9; --surface:#fff; --surface2:#f0f3f8; --surface3:#e8ecf3;
+  --border:#dde2ec; --border2:#c8d0df;
+  --accent:#2563eb; --accent-h:#1d4ed8; --accent-dim:rgba(37,99,235,0.08);
+  --green:#16a34a; --green-dim:rgba(22,163,74,0.09);
+  --red:#dc2626; --red-dim:rgba(220,38,38,0.08);
+  --orange:#ea580c; --orange-dim:rgba(234,88,12,0.09);
+  --yellow:#b45309; --yellow-dim:rgba(180,83,9,0.09);
+  --blue:#2563eb; --blue-dim:rgba(37,99,235,0.09);
+  --text:#111827; --text2:#374151; --muted:#6b7280; --muted2:#9ca3af;
+  --radius:12px; --radius-sm:8px;
+  --shadow:0 1px 4px rgba(0,0,0,0.07),0 4px 16px rgba(0,0,0,0.04);
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.06);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;-webkit-font-smoothing:antialiased;}
+
+/* ── LOGIN ── */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg);}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px 36px;width:100%;max-width:400px;box-shadow:var(--shadow);}
+.login-logo{font-weight:800;font-size:22px;color:var(--accent);letter-spacing:-0.8px;margin-bottom:6px;}
+.login-logo span{color:var(--text);}
+.login-sub{font-size:13px;color:var(--muted);margin-bottom:28px;}
+.login-group{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+.login-group label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);}
+.login-inp{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:11px 13px;color:var(--text);font-family:'Inter',sans-serif;font-size:14px;width:100%;transition:border-color .15s;}
+.login-inp:focus{outline:none;border-color:var(--accent);}
+.login-btn{width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-top:8px;transition:all .15s;}
+.login-btn:hover{background:var(--accent-h);}
+.login-err{font-size:12px;color:var(--red);margin-top:8px;display:none;}
+
+/* ── NAV ── */
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;gap:16px;height:58px;position:sticky;top:0;z-index:200;box-shadow:var(--shadow-sm);}
+.nav-logo{font-weight:800;font-size:18px;color:var(--accent);letter-spacing:-0.8px;}
+.nav-logo span{color:var(--text);}
+.nav-center{display:flex;align-items:center;gap:8px;margin:0 auto;}
+.nav-back{display:none;align-items:center;gap:6px;background:none;border:1px solid var(--border);border-radius:7px;padding:6px 13px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s;}
+.nav-back:hover{border-color:var(--accent);color:var(--accent);}
+.nav-page-title{font-size:15px;font-weight:700;color:var(--text2);}
+.nav-right{display:flex;align-items:center;gap:8px;}
+.btn-add{padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s;white-space:nowrap;}
+.btn-add:hover{background:var(--accent-h);transform:translateY(-1px);}
+.btn-logout{padding:7px 14px;background:none;border:1px solid var(--border2);border-radius:7px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s;}
+.btn-logout:hover{border-color:var(--red);color:var(--red);}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:4px;}
+.sync-dot.syncing{background:var(--yellow);animation:pulse .8s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+
+/* ── PAGES ── */
+.page{display:none;padding:26px 28px 60px;max-width:1280px;margin:0 auto;}
+.page.active{display:block;}
+
+/* ── SECTION HEADER ── */
+.sec-hd{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.sec-hd::after{content:'';flex:1;height:1px;background:var(--border);}
+.badge{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:2px 9px;font-size:11px;color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0;}
+
+/* ── STAT STRIPS ── */
+.strip{display:grid;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:18px;box-shadow:var(--shadow-sm);}
+.strip-4{grid-template-columns:repeat(4,1fr);}
+.scell{background:var(--surface);padding:18px 20px;position:relative;}
+.scell::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.c-blue::before{background:var(--blue);} .c-green::before{background:var(--green);}
+.c-red::before{background:var(--red);} .c-orange::before{background:var(--orange);}
+.c-yellow::before{background:var(--yellow);}
+.sl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.7px;color:var(--muted);margin-bottom:7px;}
+.sv{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;line-height:1;color:var(--text);}
+.sv.c-blue{color:var(--blue);} .sv.c-green{color:var(--green);} .sv.c-red{color:var(--red);}
+.sv.c-orange{color:var(--orange);} .sv.c-yellow{color:var(--yellow);}
+.ss{font-size:11px;color:var(--muted);margin-top:5px;}
+
+/* ── VISUALS ── */
+.vsummary{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px;}
+.vcrd{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;box-shadow:var(--shadow-sm);}
+.vcrd-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:16px;}
+.chit-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.chit-bar-row:last-child{margin-bottom:0;}
+.chit-bar-label{font-size:12px;font-weight:600;color:var(--text2);width:90px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;}
+.chit-bar-track{flex:1;height:8px;background:var(--surface3);border-radius:4px;overflow:hidden;}
+.chit-bar-fill{height:100%;border-radius:4px;}
+.chit-bar-pct{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--muted);width:34px;text-align:right;flex-shrink:0;}
+.netpos-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);}
+.netpos-row:last-child{border-bottom:none;}
+.netpos-name{font-size:13px;font-weight:600;color:var(--text2);}
+.netpos-val{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;}
+.netpos-bar-track{height:4px;background:var(--surface3);border-radius:2px;margin-top:4px;overflow:hidden;}
+.netpos-bar-fill{height:100%;border-radius:2px;}
+
+/* ── CHIT ROWS ── */
+.chits-grid{display:flex;flex-direction:column;gap:10px;}
+.chit-row{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);display:flex;align-items:center;gap:14px;padding:14px 18px;cursor:pointer;transition:all .15s;box-shadow:var(--shadow-sm);}
+.chit-row:hover{border-color:var(--accent);box-shadow:0 2px 12px rgba(37,99,235,0.12);transform:translateY(-1px);}
+.chit-row.is-new{border-color:var(--accent);background:var(--accent-dim);animation:rowIn .4s cubic-bezier(.34,1.4,.64,1) both;}
+@keyframes rowIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.crow-id{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;padding:3px 8px;border-radius:5px;background:var(--surface2);color:var(--muted);border:1px solid var(--border);white-space:nowrap;}
+.crow-name{font-weight:700;font-size:14px;}
+.crow-company{font-size:11px;color:var(--muted);margin-top:1px;}
+.crow-meta{display:flex;align-items:center;gap:18px;margin-left:auto;}
+.cm-i .cml{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);}
+.cm-i .cmv{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;}
+.crow-prog{display:flex;align-items:center;gap:8px;}
+.prog-track{width:80px;height:5px;background:var(--surface3);border-radius:3px;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),#7c3aed);border-radius:3px;}
+.prog-text{font-size:11px;color:var(--muted);white-space:nowrap;}
+.arrow-icon{font-size:14px;color:var(--muted2);margin-left:6px;}
+
+/* ── STATUS PILL ── */
+.spill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;}
+.spill.scomp{background:var(--green-dim);color:var(--green);}
+.spill.sact{background:var(--blue-dim);color:var(--blue);}
+.spill.sprz{background:var(--orange-dim);color:var(--orange);}
+.sdot{width:5px;height:5px;border-radius:50%;background:currentColor;}
+
+/* ── DETAIL ── */
+.detail-hero{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px 24px;margin-bottom:18px;box-shadow:var(--shadow-sm);display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.detail-hero-left h1{font-size:22px;font-weight:800;letter-spacing:-0.5px;}
+.detail-hero-left .sub{font-size:13px;color:var(--muted);margin-top:4px;}
+.detail-hero-right{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.dg{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:18px;}
+.dc{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px 15px;box-shadow:var(--shadow-sm);}
+.dl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);margin-bottom:5px;}
+.dv{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--text);}
+.dv.g{color:var(--green);}.dv.r{color:var(--red);}.dv.b{color:var(--blue);}.dv.o{color:var(--orange);}.dv.y{color:var(--yellow);}
+
+/* ── PRIZE SEC ── */
+.prize-sec{background:var(--surface);border:1px solid #fbbf24;border-radius:var(--radius-sm);padding:16px 18px;margin-bottom:18px;box-shadow:var(--shadow-sm);}
+.prize-sec-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:var(--orange);margin-bottom:14px;}
+.prize-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;}
+.pf{display:flex;flex-direction:column;gap:5px;}
+.pf label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);}
+.pin{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:8px 11px;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text);width:140px;}
+.pin:focus{outline:none;border-color:var(--accent);}
+
+/* ── TABLE ── */
+.tbl-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;box-shadow:var(--shadow-sm);margin-bottom:18px;overflow-x:auto;}
+.itbl{width:100%;border-collapse:collapse;font-size:13px;min-width:600px;}
+.itbl th{text-align:left;padding:9px 13px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:var(--muted);background:var(--surface2);border-bottom:1px solid var(--border);white-space:nowrap;}
+.itbl td{padding:9px 13px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap;}
+.itbl tr:last-child td{border-bottom:none;}
+.itbl tbody tr:hover td{background:var(--surface2);}
+tr.rp td{background:rgba(22,163,74,0.04);}
+tr.rz td{background:rgba(234,88,12,0.06);}
+tr.ro td{background:rgba(220,38,38,0.04);}
+tr.rn td{background:rgba(180,83,9,0.06);}
+.ck{width:26px;height:26px;border-radius:6px;border:1.5px solid var(--border2);background:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:13px;transition:all .15s;color:var(--green);}
+.ck.on{border-color:var(--green);background:var(--green-dim);}
+.ck:hover{border-color:var(--green);}
+.inp-n{background:transparent;border:1px solid transparent;padding:4px 6px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;width:110px;border-radius:5px;text-align:right;}
+.inp-n:hover{border-color:var(--border2);}
+.inp-n:focus{outline:none;border-color:var(--accent);background:var(--surface2);}
+.inp-n::placeholder{color:var(--muted2);}
+.inp-r{background:transparent;border:1px solid transparent;padding:4px 6px;color:var(--muted);font-family:'Inter',sans-serif;font-size:12px;width:120px;border-radius:5px;}
+.inp-r:hover{border-color:var(--border2);}
+.inp-r:focus{outline:none;border-color:var(--accent);background:var(--surface2);color:var(--text);}
+
+/* ── BUTTONS ── */
+.btn{padding:9px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;border:none;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
+.btn-primary{background:var(--accent);color:#fff;} .btn-primary:hover{background:var(--accent-h);}
+.btn-ghost{background:none;border:1px solid var(--border2);color:var(--text2);} .btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+.btn-green{background:var(--green);color:#fff;} .btn-green:hover{background:#15803d;}
+.btn-danger{background:none;border:1px solid var(--border2);color:var(--red);} .btn-danger:hover{background:var(--red-dim);border-color:var(--red);}
+.btn-sm{padding:6px 13px;font-size:12px;border-radius:7px;}
+
+/* ── MODAL ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:300;align-items:center;justify-content:center;padding:20px;}
+.overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;width:100%;max-width:540px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,0.2);}
+.mhd{padding:22px 24px 0;display:flex;align-items:center;justify-content:space-between;}
+.mhd h2{font-size:17px;font-weight:800;}
+.mx{background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer;line-height:1;}
+.mbody{padding:20px 24px 24px;}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.fgroup{display:flex;flex-direction:column;gap:6px;}
+.fgroup label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);}
+.finp{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 13px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;transition:border-color .15s;width:100%;}
+.finp:focus{outline:none;border-color:var(--accent);}
+.mft{padding:0 24px 24px;display:flex;gap:10px;justify-content:flex-end;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);padding:12px 18px;border-radius:9px;font-size:13px;z-index:999;transform:translateY(60px);opacity:0;transition:all .25s;pointer-events:none;box-shadow:var(--shadow);font-weight:500;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.ok{border-color:var(--green);color:var(--green);}
+.toast.err{border-color:var(--red);color:var(--red);}
+
+/* ── DUE BANNER ── */
+.due-banner{background:#fefce8;border:1px solid #fcd34d;border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:18px;font-size:13px;color:#713f12;display:none;}
+.due-banner.show{display:block;}
+.due-banner strong{display:block;font-size:13px;margin-bottom:6px;}
+.due-item{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #fde68a;}
+.due-item:last-child{border-bottom:none;}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty-icon{font-size:44px;margin-bottom:14px;}
+
+/* ── LOADING ── */
+#loading-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg);}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:900px){.vsummary{grid-template-columns:1fr}.strip-4{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){nav{padding:0 14px}.page{padding:16px 14px 50px}.fg{grid-template-columns:1fr}.crow-meta{display:none}}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading-screen"><div class="spinner"></div></div>
+
+<!-- LOGIN -->
+<div id="login-screen" style="display:none">
+  <div class="login-card">
+    <div class="login-logo">Chit<span>Track</span> Pro</div>
+    <div class="login-sub">Sign in to manage your chit funds</div>
+    <div class="login-group">
+      <label>Email</label>
+      <input class="login-inp" type="email" id="l-email" placeholder="family@example.com" autocomplete="email">
+    </div>
+    <div class="login-group">
+      <label>Password</label>
+      <input class="login-inp" type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" style="display:none">
+  <nav>
+    <div class="nav-logo">Chit<span>Track</span> Pro</div>
+    <div class="nav-center">
+      <button class="nav-back" id="nav-back" onclick="goOverview()">← Overview</button>
+      <span class="nav-page-title" id="nav-page-title"></span>
+    </div>
+    <div class="nav-right">
+      <span id="sync-status" style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px">
+        <span class="sync-dot" id="sync-dot"></span><span id="sync-label">Synced</span>
+      </span>
+      <button class="btn-logout" onclick="doLogout()">Sign Out</button>
+      <button class="btn-add" onclick="openAddModal()">＋ Add Chit</button>
+    </div>
+  </nav>
+
+  <!-- OVERVIEW -->
+  <div class="page active" id="page-overview">
+    <div class="due-banner" id="due-banner">
+      <strong>🔔 Upcoming Payments</strong>
+      <div id="due-items"></div>
+    </div>
+    <div class="strip strip-4" id="strip1"></div>
+    <div class="strip strip-4" id="strip2"></div>
+    <div class="vsummary" id="vsummary"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="sec-hd" style="margin-bottom:0;flex:1">All Chits <span class="badge" id="cnt-badge">0</span></div>
+      <button class="btn btn-ghost btn-sm" onclick="exportCalendar()" style="margin-left:12px">📅 Export to Calendar</button>
+    </div>
+    <div class="chits-grid" id="chits-grid">
+      <div class="empty"><div class="empty-icon">📋</div><p>No chits yet.<br>Click <strong>+ Add Chit</strong> to get started.</p></div>
+    </div>
+  </div>
+
+  <!-- DETAIL -->
+  <div class="page" id="page-detail">
+    <div id="detail-content"></div>
+  </div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="mhd"><h2 id="modal-title">Add New Chit</h2><button class="mx" onclick="closeModal()">×</button></div>
+    <div class="mbody">
+      <div class="fg">
+        <div class="fgroup"><label>Chit Name *</label><input class="finp" type="text" id="f-name" placeholder="e.g. My Chit 1"></div>
+        <div class="fgroup"><label>Company Name</label><input class="finp" type="text" id="f-company" placeholder="Kumaravel Chits"></div>
+        <div class="fgroup"><label>Contact Person</label><input class="finp" type="text" id="f-contact" placeholder="Agent name"></div>
+        <div class="fgroup"><label>Contact Number</label><input class="finp" type="text" id="f-phone" placeholder="9876543210"></div>
+        <div class="fgroup"><label>Chit Amount (₹) *</label><input class="finp" type="number" id="f-amount" placeholder="200000"></div>
+        <div class="fgroup"><label>Total Members *</label><input class="finp" type="number" id="f-members" placeholder="20"></div>
+        <div class="fgroup"><label>Total Months *</label><input class="finp" type="number" id="f-months" placeholder="20"></div>
+        <div class="fgroup"><label>Commission / month (₹) *</label><input class="finp" type="number" id="f-commission" placeholder="10000"></div>
+        <div class="fgroup"><label>Start Date *</label><input class="finp" type="date" id="f-startdate"></div>
+      </div>
+    </div>
+    <div class="mft">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveChit()">Save Chit</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── SUPABASE ───────────────────────────────────────────────────
+const SUPA_URL = 'https://srmuwrljtdhylbnaupbr.supabase.co';
+const SUPA_KEY = 'sb_publishable_bAornwc8gVmhELYIlxBQ0g_3D3ikdqu';
+const { createClient } = supabase;
+const sb = createClient(SUPA_URL, SUPA_KEY);
+
+// ─── STATE ───────────────────────────────────────────────────────
+let DB = { chits: [], seq: 0 };
+let dbRowId = null; // the single row id in supabase
+
+// ─── AUTH ────────────────────────────────────────────────────────
+async function init(){
+  const { data:{ session } } = await sb.auth.getSession();
+  if(session){ await startApp(); }
+  else { show('login-screen'); hide('loading-screen'); }
+}
+
+async function doLogin(){
+  const email = document.getElementById('l-email').value.trim();
+  const pass  = document.getElementById('l-pass').value;
+  const err   = document.getElementById('login-err');
+  err.style.display = 'none';
+  const btn = document.querySelector('.login-btn');
+  btn.textContent = 'Signing in…'; btn.disabled = true;
+  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+  btn.textContent = 'Sign In'; btn.disabled = false;
+  if(error){ err.textContent = error.message; err.style.display = 'block'; return; }
+  await startApp();
+}
+
+async function doLogout(){
+  await sb.auth.signOut();
+  hide('app'); show('login-screen');
+  DB = { chits:[], seq:0 }; dbRowId = null;
+}
+
+async function startApp(){
+  hide('login-screen'); hide('loading-screen'); show('app');
+  await loadFromSupabase();
+  subscribeRealtime();
+  requestNotifPermission();
+  checkDueSoon();
+  renderAll();
+}
+
+// ─── SUPABASE DATA ───────────────────────────────────────────────
+setSyncing = (v) => {
+  document.getElementById('sync-dot').className = 'sync-dot' + (v?' syncing':'');
+  document.getElementById('sync-label').textContent = v ? 'Saving…' : 'Synced';
+};
+
+async function loadFromSupabase(){
+  const { data, error } = await sb.from('chits').select('*').limit(1).single();
+  if(error && error.code !== 'PGRST116'){ console.error(error); return; }
+  if(data){ DB = data.data; dbRowId = data.id; if(data.seq) DB.seq = data.seq; }
+  else { await sb.from('chits').insert({ data: DB }); const r = await sb.from('chits').select('id').single(); if(r.data) dbRowId = r.data.id; }
+}
+
+async function saveToSupabase(){
+  if(!dbRowId) return;
+  setSyncing(true);
+  const { error } = await sb.from('chits').update({ data: DB, seq: DB.seq||0, updated_at: new Date().toISOString() }).eq('id', dbRowId);
+  setSyncing(false);
+  if(error) toast('Sync error: '+error.message, 'err');
+}
+
+function subscribeRealtime(){
+  sb.channel('chits-changes')
+    .on('postgres_changes', { event:'UPDATE', schema:'public', table:'chits' }, payload => {
+      // Another device made a change — reload
+      DB = payload.new.data;
+      if(payload.new.seq) DB.seq = payload.new.seq;
+      renderAll();
+      toast('🔄 Updated from another device', '');
+    })
+    .subscribe();
+}
+
+// ─── HELPERS ─────────────────────────────────────────────────────
+function show(id){ document.getElementById(id).style.display = ''; }
+function hide(id){ document.getElementById(id).style.display = 'none'; }
+function fN(n){ if(n==null)return'0'; const a=Math.abs(n); return(n<0?'-':'')+a.toLocaleString('en-IN'); }
+function sPill(s){
+  if(s==='Completed') return`<span class="spill scomp"><span class="sdot"></span>Completed</span>`;
+  if(s.includes('Prize Taken')) return`<span class="spill sprz"><span class="sdot"></span>Prize Taken</span>`;
+  return`<span class="spill sact"><span class="sdot"></span>Active</span>`;
+}
+function toast(msg,type){ const el=document.getElementById('toast'); el.textContent=msg; el.className='toast show '+(type||''); setTimeout(()=>el.classList.remove('show'),2800); }
+
+// ─── CHIT LOGIC ──────────────────────────────────────────────────
+function nextId(){ DB.seq=(DB.seq||0)+1; return 'CHIT-'+String(DB.seq).padStart(3,'0'); }
+
+function makeChit(id,name,company,contact,phone,amount,members,months,commission,startDate){
+  const insts=[], base=new Date(startDate), mDue=Math.round(parseFloat(amount)/parseInt(months));
+  for(let i=0;i<parseInt(months);i++){
+    const dt=new Date(base); dt.setMonth(dt.getMonth()+i);
+    insts.push({monthNo:i+1,dueDate:dt.toISOString().split('T')[0],amountDue:mDue,bidAmount:0,dividend:0,paid:false,remarks:'',iWon:false});
+  }
+  return {id,name,company,contact,phone,amount:parseFloat(amount),members:parseInt(members),
+          totalMonths:parseInt(months),commission:parseFloat(commission)||0,startDate,
+          prizeReceived:0,installments:insts};
+}
+
+function monthlyDue(c){ return Math.round(c.amount/c.totalMonths); }
+function calcDividend(c,bid){ return Math.max(0,Math.round((c.amount-bid-(c.commission||0))/c.members)); }
+
+function recomputeInstallments(c){
+  const base=monthlyDue(c); let pending=0;
+  c.installments.forEach(inst=>{
+    const deduct=Math.min(pending,base);
+    inst.amountDue=base-deduct; pending=Math.max(0,pending-deduct);
+    if(inst.bidAmount>0){ inst.dividend=calcDividend(c,inst.bidAmount); if(inst.paid) pending+=inst.dividend; }
+    else inst.dividend=0;
+  });
+}
+
+function calc(c){
+  const paid=c.installments.filter(i=>i.paid);
+  const mp=paid.length, tp=paid.reduce((s,i)=>s+i.amountDue,0);
+  const td=c.installments.reduce((s,i)=>s+(i.dividend||0),0);
+  const ml=c.totalMonths-mp, pr=c.prizeReceived||0;
+  const nco=tp-pr, np=pr+td-tp, roi=tp>0?(np/tp*100):0;
+  const tcl=c.installments.filter(i=>!i.paid).reduce((s,i)=>s+i.amountDue,0);
+  const iWonAny=c.installments.some(i=>i.iWon);
+  let status='Active';
+  if(mp>=c.totalMonths) status='Completed';
+  else if(iWonAny) status='Active - Prize Taken';
+  const nextU=c.installments.find(i=>!i.paid);
+  return {monthsPaid:mp,totalPaid:tp,totalDividend:td,monthsLeft:ml,netCashOutflow:nco,netPosition:np,roi,status,nextUnpaid:nextU,totalCommitmentLeft:tcl,prizeReceived:pr};
+}
+
+// ─── NOTIFICATIONS ───────────────────────────────────────────────
+function requestNotifPermission(){
+  if('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
+}
+
+function checkDueSoon(){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const in7   = new Date(today); in7.setDate(in7.getDate()+7);
+  const items = [];
+  (DB.chits||[]).forEach(c=>{
+    const next = c.installments?.find(i=>!i.paid);
+    if(!next) return;
+    const due = new Date(next.dueDate); due.setHours(0,0,0,0);
+    const diff = Math.round((due-today)/(1000*60*60*24));
+    if(diff<=7 && diff>=0) items.push({name:c.name,date:next.dueDate,amt:next.amountDue,diff});
+  });
+
+  // Banner
+  const banner = document.getElementById('due-banner');
+  const dueDiv = document.getElementById('due-items');
+  if(items.length){
+    dueDiv.innerHTML = items.map(i=>`
+      <div class="due-item">
+        <span><strong>${i.name}</strong> — due ${i.diff===0?'<b>today</b>':i.diff===1?'<b>tomorrow</b>':`in ${i.diff} days`} (${i.date})</span>
+        <span style="font-family:JetBrains Mono,monospace;font-weight:700">₹${fN(i.amt)}</span>
+      </div>`).join('');
+    banner.classList.add('show');
+
+    // Browser notification
+    if(Notification.permission==='granted'){
+      items.forEach(i=>{
+        new Notification('ChitTrack — Payment Due', {
+          body: `${i.name}: ₹${fN(i.amt)} due ${i.diff===0?'today':i.diff===1?'tomorrow':'in '+i.diff+' days'}`,
+          icon: ''
+        });
+      });
+    }
+  } else {
+    banner.classList.remove('show');
+  }
+}
+
+// ─── CALENDAR EXPORT (ICS) ───────────────────────────────────────
+function exportCalendar(){
+  const lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//ChitTrack Pro//EN','CALSCALE:GREGORIAN'];
+  (DB.chits||[]).forEach(c=>{
+    c.installments.forEach(inst=>{
+      if(inst.paid) return;
+      const d = inst.dueDate.replace(/-/g,'');
+      const uid = `chittrack-${c.id}-mo${inst.monthNo}@chittrack`;
+      const summary = `${c.name} — ₹${fN(inst.amountDue)} due`;
+      const desc = `Chit: ${c.name} (${c.id})\\nMonth ${inst.monthNo} of ${c.totalMonths}\\nAmount: ₹${fN(inst.amountDue)}`;
+      // Reminder 3 days before
+      lines.push('BEGIN:VEVENT',`UID:${uid}`,`DTSTART;VALUE=DATE:${d}`,`DTEND;VALUE=DATE:${d}`,
+        `SUMMARY:${summary}`,`DESCRIPTION:${desc}`,
+        'BEGIN:VALARM','TRIGGER:-P3D','ACTION:DISPLAY',`DESCRIPTION:${summary}`,'END:VALARM',
+        'END:VEVENT');
+    });
+  });
+  lines.push('END:VCALENDAR');
+  const blob = new Blob([lines.join('\r\n')], {type:'text/calendar'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'chittrack_due_dates.ics'; a.click();
+  toast('Calendar file downloaded — import into Google/Apple Calendar ✓','ok');
+}
+
+// ─── VISUALS ─────────────────────────────────────────────────────
+function renderVisuals(){
+  const chits=DB.chits||[]; const wrap=document.getElementById('vsummary');
+  if(!chits.length){ wrap.innerHTML=''; return; }
+  const bars=chits.map(c=>{ const r=calc(c),pct=Math.round(r.monthsPaid/c.totalMonths*100),col=pct===100?'var(--green)':pct>50?'var(--accent)':'var(--orange)';
+    return`<div class="chit-bar-row"><div class="chit-bar-label" title="${c.name}">${c.name}</div><div class="chit-bar-track"><div class="chit-bar-fill" style="width:${pct}%;background:${col}"></div></div><div class="chit-bar-pct">${pct}%</div></div>`;}).join('');
+  const maxAbs=Math.max(...chits.map(c=>Math.abs(calc(c).netPosition)),1);
+  const nets=chits.map(c=>{ const r=calc(c),np=r.netPosition,pct=Math.round(Math.abs(np)/maxAbs*100),col=np>=0?'var(--green)':'var(--red)',sign=np>=0?'+':'-';
+    return`<div class="netpos-row"><div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between"><span class="netpos-name">${c.name}</span><span class="netpos-val" style="color:${col}">${sign}₹${fN(Math.abs(np))}</span></div><div class="netpos-bar-track"><div class="netpos-bar-fill" style="width:${pct}%;background:${col}"></div></div></div></div>`;}).join('');
+  wrap.innerHTML=`<div class="vcrd"><div class="vcrd-title">Payment Progress</div>${bars}</div><div class="vcrd"><div class="vcrd-title">Net Position per Chit</div>${nets}</div>`;
+}
+
+// ─── STRIPS ──────────────────────────────────────────────────────
+function renderStrips(){
+  const chits=DB.chits||[];
+  let tp=0,td=0,tpr=0,tnp=0,ac=0,cc=0,pc=0;
+  chits.forEach(c=>{ const r=calc(c); tp+=r.totalPaid; td+=r.totalDividend; tpr+=r.prizeReceived; tnp+=r.netPosition;
+    if(r.status==='Completed') cc++; else if(c.installments.some(i=>i.iWon)) pc++; else ac++; });
+  const nco=tp-tpr;
+  document.getElementById('strip1').innerHTML=`
+    <div class="scell c-${nco<=0?'green':'red'}"><div class="sl">Net Cash Outflow</div><div class="sv c-${nco<=0?'green':'red'}">₹${fN(nco)}</div><div class="ss">Total paid − prize received</div></div>
+    <div class="scell c-blue"><div class="sl">Dividends Saved</div><div class="sv c-blue">₹${fN(td)}</div><div class="ss">Across all chits</div></div>
+    <div class="scell c-orange"><div class="sl">Total Prize Received</div><div class="sv c-orange">₹${fN(tpr)}</div><div class="ss">Won chits</div></div>
+    <div class="scell c-${tnp>=0?'green':'red'}"><div class="sl">Net Position</div><div class="sv c-${tnp>=0?'green':'red'}">₹${fN(tnp)}</div><div class="ss">Prize + Div − Paid</div></div>`;
+  document.getElementById('strip2').innerHTML=`
+    <div class="scell c-blue"><div class="sl">Active Chits</div><div class="sv">${ac}</div><div class="ss">Waiting for prize</div></div>
+    <div class="scell c-orange"><div class="sl">Prize Taken</div><div class="sv">${pc}</div><div class="ss">Still paying</div></div>
+    <div class="scell c-green"><div class="sl">Completed</div><div class="sv">${cc}</div><div class="ss">All months paid</div></div>
+    <div class="scell c-yellow"><div class="sl">Total Chits</div><div class="sv">${chits.length}</div><div class="ss">Across all groups</div></div>`;
+}
+
+// ─── OVERVIEW ────────────────────────────────────────────────────
+function renderOverview(newId){
+  const chits=DB.chits||[]; document.getElementById('cnt-badge').textContent=chits.length;
+  const grid=document.getElementById('chits-grid');
+  if(!chits.length){ grid.innerHTML='<div class="empty"><div class="empty-icon">📋</div><p>No chits yet.<br>Click <strong>+ Add Chit</strong> to begin.</p></div>'; return; }
+  grid.innerHTML=chits.map((c,ci)=>{
+    const r=calc(c),pct=Math.round(r.monthsPaid/c.totalMonths*100);
+    return`<div class="chit-row${c.id===newId?' is-new':''}" style="animation-delay:${ci*0.04}s" onclick="openDetail('${c.id}')">
+      <div class="crow-id">${c.id}</div>
+      <div><div class="crow-name">${c.name}</div><div class="crow-company">${c.company||'No company'}</div></div>
+      <div class="crow-meta">
+        <div class="cm-i"><div class="cml">Amount</div><div class="cmv">₹${fN(c.amount)}</div></div>
+        <div class="cm-i"><div class="cml">Progress</div><div class="crow-prog"><div class="prog-track"><div class="prog-fill" style="width:${pct}%"></div></div><div class="prog-text">${r.monthsPaid}/${c.totalMonths}</div></div></div>
+        <div class="cm-i"><div class="cml">Net Pos</div><div class="cmv" style="color:${r.netPosition>=0?'var(--green)':'var(--red)'}">₹${fN(r.netPosition)}</div></div>
+        ${sPill(r.status)}
+      </div>
+      <span class="arrow-icon">→</span>
+    </div>`;
+  }).join('');
+  if(newId) setTimeout(()=>document.querySelector('.is-new')?.scrollIntoView({behavior:'smooth',block:'center'}),120);
+}
+
+// ─── DETAIL ──────────────────────────────────────────────────────
+function openDetail(cid){
+  const c=DB.chits.find(x=>x.id===cid); if(!c) return;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-detail').classList.add('active');
+  document.getElementById('nav-back').style.display='flex';
+  document.getElementById('nav-page-title').textContent=c.name+' · '+c.id;
+  renderDetail(c);
+}
+
+function goOverview(){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-overview').classList.add('active');
+  document.getElementById('nav-back').style.display='none';
+  document.getElementById('nav-page-title').textContent='';
+  renderAll();
+}
+
+function renderDetail(c){
+  const r=calc(c), today=new Date().toISOString().split('T')[0], base=monthlyDue(c);
+  const firstUnpaidIdx=c.installments.findIndex(i=>!i.paid);
+  const alreadyWonIdx=c.installments.findIndex(i=>i.iWon);
+
+  const iRows=c.installments.map((inst,idx)=>{
+    let rc='';
+    if(inst.iWon) rc='rz';
+    else if(inst.paid) rc='rp';
+    else if(!inst.paid&&inst.dueDate<today) rc='ro';
+    else if(!inst.paid&&idx===firstUnpaidIdx) rc='rn';
+    const saving=base-inst.amountDue;
+    const savingCell=saving>0?`<span style="font-family:JetBrains Mono,monospace;color:var(--green);font-weight:600">−₹${fN(saving)}</span>`:`<span style="color:var(--muted2)">—</span>`;
+    const divCell=inst.dividend>0?`<span style="font-family:JetBrains Mono,monospace;color:var(--green);font-weight:600">₹${fN(inst.dividend)}</span>`:`<span style="color:var(--muted2)">—</span>`;
+    return`<tr class="${rc}">
+      <td style="text-align:center;color:var(--muted);font-weight:600">${inst.monthNo}</td>
+      <td style="font-family:JetBrains Mono,monospace;color:var(--muted)">₹${fN(base)}</td>
+      <td style="font-family:JetBrains Mono,monospace;font-weight:700;color:${inst.amountDue<base?'var(--green)':'var(--text)'}">₹${fN(inst.amountDue)}</td>
+      <td>${savingCell}</td>
+      <td><input class="inp-n" type="number" placeholder="Bid amt…" value="${inst.bidAmount||''}" onchange="recordBid('${c.id}',${idx},this.value)"></td>
+      <td>${divCell}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:7px">
+          <button class="ck ${inst.paid?'on':''}" onclick="tPaid('${c.id}',${idx})">${inst.paid?'✓':''}</button>
+          <label style="display:flex;align-items:center;gap:4px;cursor:${alreadyWonIdx>=0&&!inst.iWon?'not-allowed':'pointer'};font-size:12px;color:${inst.iWon?'var(--orange)':alreadyWonIdx>=0&&!inst.iWon?'var(--muted2)':'var(--muted)'}">
+            <input type="checkbox" ${inst.iWon?'checked':''} ${alreadyWonIdx>=0&&!inst.iWon?'disabled':''} style="accent-color:var(--orange);width:13px;height:13px" onchange="toggleIWon('${c.id}',${idx},this.checked)"> I won
+          </label>
+        </div>
+      </td>
+      <td><input class="inp-r" type="text" placeholder="Notes…" value="${inst.remarks||''}" onchange="sField('${c.id}',${idx},'remarks',this.value)"></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('detail-content').innerHTML=`
+    <div class="detail-hero">
+      <div class="detail-hero-left">
+        <h1>${c.name}</h1>
+        <div class="sub">${c.id} · ${c.company||'No company'}${c.contact?' · '+c.contact:''}${c.phone?' · '+c.phone:''}</div>
+      </div>
+      <div class="detail-hero-right">
+        ${sPill(r.status)}
+        <button class="btn btn-ghost btn-sm" onclick="openEditModal('${c.id}')">✏️ Edit</button>
+        <button class="btn btn-green btn-sm" onclick="exportExcel('${c.id}')">⬇ Excel</button>
+        <button class="btn btn-danger btn-sm" onclick="delChit('${c.id}')">🗑 Delete</button>
+      </div>
+    </div>
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:var(--radius-sm);padding:11px 16px;margin-bottom:16px;font-size:13px;color:#1e40af;line-height:1.8">
+      Base = ₹${fN(c.amount)} ÷ ${c.totalMonths} mo = <strong>₹${fN(base)}</strong> &nbsp;|&nbsp; Members: <strong>${c.members}</strong> &nbsp;|&nbsp; Commission: <strong>₹${fN(c.commission)}</strong>/mo &nbsp;|&nbsp;
+      Profit = (Chit − Bid − Commission) ÷ Members → deducted <strong>next month after Paid is ticked</strong>
+    </div>
+    <div class="sec-hd">Key Metrics</div>
+    <div class="dg">
+      <div class="dc"><div class="dl">Chit Amount</div><div class="dv b">₹${fN(c.amount)}</div></div>
+      <div class="dc"><div class="dl">Members</div><div class="dv">${c.members}</div></div>
+      <div class="dc"><div class="dl">Base Installment</div><div class="dv b">₹${fN(base)}</div></div>
+      <div class="dc"><div class="dl">Commission / mo</div><div class="dv">₹${fN(c.commission)}</div></div>
+      <div class="dc"><div class="dl">Months Paid</div><div class="dv b">${r.monthsPaid}</div></div>
+      <div class="dc"><div class="dl">Months Left</div><div class="dv y">${r.monthsLeft}</div></div>
+      <div class="dc"><div class="dl">Total Paid So Far</div><div class="dv b">₹${fN(r.totalPaid)}</div></div>
+      <div class="dc"><div class="dl">Dividends Saved</div><div class="dv g">₹${fN(r.totalDividend)}</div></div>
+      <div class="dc"><div class="dl">Next Due Date</div><div class="dv">${r.nextUnpaid?r.nextUnpaid.dueDate:'—'}</div></div>
+      <div class="dc"><div class="dl">Next Installment</div><div class="dv ${r.nextUnpaid&&r.nextUnpaid.amountDue<base?'g':'b'}">₹${fN(r.nextUnpaid?r.nextUnpaid.amountDue:0)}</div></div>
+      <div class="dc"><div class="dl">Commitment Left</div><div class="dv y">₹${fN(r.totalCommitmentLeft)}</div></div>
+      <div class="dc"><div class="dl">Net Position</div><div class="dv ${r.netPosition>=0?'g':'r'}">₹${fN(r.netPosition)}</div></div>
+    </div>
+    <div class="sec-hd">Monthly Installments
+      <span style="margin-left:auto;font-size:10px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">🟢 Paid &nbsp;🟡 Next &nbsp;🔴 Overdue &nbsp;🏆 I won</span>
+    </div>
+    <div class="tbl-wrap">
+      <table class="itbl">
+        <thead><tr>
+          <th style="text-align:center">Mo#</th><th>Base (₹)</th><th>You Pay (₹)</th>
+          <th>Profit Deducted</th><th>Winning Bid (₹)</th><th>Dividend (₹)</th><th>Paid?</th><th>Remarks</th>
+        </tr></thead>
+        <tbody>${iRows}</tbody>
+      </table>
+    </div>`;
+}
+
+// ─── ACTIONS ─────────────────────────────────────────────────────
+async function tPaid(cid,idx){
+  const c=DB.chits.find(x=>x.id===cid); if(!c)return;
+  c.installments[idx].paid=!c.installments[idx].paid;
+  recomputeInstallments(c);
+  await saveToSupabase(); renderDetail(c); checkDueSoon();
+  toast(c.installments[idx].paid?'✓ Paid — profit carried forward':'Unmarked','ok');
+}
+
+async function recordBid(cid,idx,val){
+  const c=DB.chits.find(x=>x.id===cid); if(!c)return;
+  c.installments[idx].bidAmount=parseFloat(val)||0;
+  recomputeInstallments(c);
+  await saveToSupabase(); renderDetail(c);
+  if(val>0){ const div=c.installments[idx].dividend; toast(`Bid ₹${fN(val)} → Dividend ₹${fN(div)} → next month after Paid`,'ok'); }
+}
+
+async function sField(cid,idx,f,v){
+  const c=DB.chits.find(x=>x.id===cid); if(!c)return;
+  c.installments[idx][f]=v; await saveToSupabase();
+}
+
+async function toggleIWon(cid,idx,checked){
+  const c=DB.chits.find(x=>x.id===cid); if(!c)return;
+  const already=c.installments.findIndex(i=>i.iWon);
+  if(checked&&already>=0&&already!==idx){ toast('You can only win once per chit.','err'); renderDetail(c); return; }
+  c.installments[idx].iWon=checked;
+  c.prizeReceived=checked?(c.installments[idx].bidAmount||0):0;
+  recomputeInstallments(c);
+  await saveToSupabase(); renderDetail(c);
+  toast(checked?`Month ${c.installments[idx].monthNo} — marked as your win!`:'Unmarked','ok');
+}
+
+async function delChit(cid){
+  if(!confirm('Delete this chit permanently?')) return;
+  DB.chits=DB.chits.filter(c=>c.id!==cid);
+  await saveToSupabase(); goOverview(); toast('Chit deleted','');
+}
+
+// ─── MODAL ───────────────────────────────────────────────────────
+let editId=null;
+function openAddModal(){ editId=null; document.getElementById('modal-title').textContent='Add New Chit'; ['name','company','contact','phone','amount','members','months','commission'].forEach(f=>document.getElementById('f-'+f).value=''); document.getElementById('f-startdate').value=new Date().toISOString().split('T')[0]; document.getElementById('modal-overlay').classList.add('open'); }
+function openEditModal(cid){ const c=DB.chits.find(x=>x.id===cid);if(!c)return; editId=cid; document.getElementById('modal-title').textContent='Edit Chit'; document.getElementById('f-name').value=c.name; document.getElementById('f-company').value=c.company||''; document.getElementById('f-contact').value=c.contact||''; document.getElementById('f-phone').value=c.phone||''; document.getElementById('f-amount').value=c.amount; document.getElementById('f-members').value=c.members||''; document.getElementById('f-months').value=c.totalMonths; document.getElementById('f-commission').value=c.commission||''; document.getElementById('f-startdate').value=c.startDate; document.getElementById('modal-overlay').classList.add('open'); }
+function closeModal(){ document.getElementById('modal-overlay').classList.remove('open'); }
+
+async function saveChit(){
+  const name=document.getElementById('f-name').value.trim();
+  const company=document.getElementById('f-company').value.trim(), contact=document.getElementById('f-contact').value.trim(), phone=document.getElementById('f-phone').value.trim();
+  const amount=parseFloat(document.getElementById('f-amount').value), members=parseInt(document.getElementById('f-members').value);
+  const months=parseInt(document.getElementById('f-months').value), commission=parseFloat(document.getElementById('f-commission').value)||0;
+  const startDate=document.getElementById('f-startdate').value;
+  if(!name||!amount||!members||!months||!startDate){ toast('Fill all required fields (*)','err'); return; }
+  if(!DB.chits) DB.chits=[];
+  if(editId){ const i=DB.chits.findIndex(c=>c.id===editId); if(i>=0) Object.assign(DB.chits[i],{name,company,contact,phone,commission}); }
+  else { const id=nextId(); DB.chits.push(makeChit(id,name,company,contact,phone,amount,members,months,commission,startDate)); }
+  await saveToSupabase(); closeModal();
+  if(editId && document.getElementById('page-detail').classList.contains('active')){ const c=DB.chits.find(x=>x.id===editId); if(c) renderDetail(c); }
+  else { goOverview(); if(!editId) setTimeout(()=>renderOverview(DB.chits[DB.chits.length-1]?.id),50); }
+  toast(editId?'Chit updated ✓':'✓ Chit added!','ok'); editId=null;
+}
+
+// ─── EXCEL EXPORT ────────────────────────────────────────────────
+function exportExcel(cid){
+  const c=DB.chits.find(x=>x.id===cid); if(!c)return; const r=calc(c), base=monthlyDue(c);
+  const summary=[['ChitTrack Pro — Chit Detail'],[],['Field','Value'],['Chit ID',c.id],['Chit Name',c.name],['Company',c.company||''],['Contact',c.contact||''],['Phone',c.phone||''],['Chit Amount',c.amount],['Members',c.members],['Commission/mo',c.commission],['Base Installment',base],['Total Months',c.totalMonths],['Start Date',c.startDate],['Months Paid',r.monthsPaid],['Months Left',r.monthsLeft],['Total Paid',r.totalPaid],['Dividends Saved',r.totalDividend],['Prize Received',r.prizeReceived],['Net Position',r.netPosition],['ROI %',parseFloat(r.roi.toFixed(2))],['Status',r.status]];
+  const instH=['Mo#','Due Date','Base (₹)','Winning Bid (₹)','Dividend (₹)','You Pay (₹)','Paid?','I Won?','Remarks'];
+  const instR=c.installments.map(i=>[i.monthNo,i.dueDate,base,i.bidAmount||0,i.dividend||0,i.amountDue,i.paid?'Yes':'No',i.iWon?'Yes':'No',i.remarks||'']);
+  const wb=XLSX.utils.book_new();
+  const ws1=XLSX.utils.aoa_to_sheet(summary); ws1['!cols']=[{wch:28},{wch:24}]; XLSX.utils.book_append_sheet(wb,ws1,'Summary');
+  const ws2=XLSX.utils.aoa_to_sheet([instH,...instR]); ws2['!cols']=[{wch:6},{wch:13},{wch:12},{wch:16},{wch:14},{wch:12},{wch:8},{wch:8},{wch:22}]; XLSX.utils.book_append_sheet(wb,ws2,'Installments');
+  XLSX.writeFile(wb,`${c.id}_${c.name.replace(/\s+/g,'_')}.xlsx`); toast('Excel downloaded ✓','ok');
+}
+
+// ─── MASTER RENDER ───────────────────────────────────────────────
+function renderAll(newId){ renderStrips(); renderVisuals(); renderOverview(newId); }
+
+// ─── BOOT ────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
