@@ -218,7 +218,8 @@ tr.rn td{background:rgba(180,83,9,0.06);}
 <div id="loading-screen" style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg)"><div class="spinner"></div></div>
 
 <!-- LOGIN -->
-<div id="login-screen" style="display:none;align-items:center;justify-content:center;min-height:100vh;background:var(--bg)">
+<div id="login-screen" style="display:none">
+  <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg)">
   <div class="login-card">
     <div class="login-logo">Chit<span>Track</span> Pro</div>
     <div class="login-sub">Sign in to manage your chit funds</div>
@@ -232,6 +233,7 @@ tr.rn td{background:rgba(180,83,9,0.06);}
     </div>
     <button class="login-btn" onclick="doLogin()">Sign In</button>
     <div class="login-err" id="login-err"></div>
+  </div>
   </div>
 </div>
 
@@ -409,11 +411,7 @@ function subscribeRealtime(){
 }
 
 // ─── HELPERS ─────────────────────────────────────────────────────
-function show(id){
-  const el = document.getElementById(id);
-  // login-screen needs flex to center content
-  el.style.display = (id === 'login-screen') ? 'flex' : '';
-}
+function show(id){ document.getElementById(id).style.display = 'block'; }
 function hide(id){ document.getElementById(id).style.display = 'none'; }
 function fN(n){ if(n==null)return'0'; const a=Math.abs(n); return(n<0?'-':'')+a.toLocaleString('en-IN'); }
 function sPill(s){
