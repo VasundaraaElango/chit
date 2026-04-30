@@ -342,6 +342,8 @@ async function doLogout(){
 async function startApp(){
   hide('login-screen'); hide('loading-screen'); show('app');
   await loadFromSupabase();
+  console.log('DB after load:', JSON.stringify(DB));
+  console.log('dbRowId:', dbRowId);
   subscribeRealtime();
   requestNotifPermission();
   checkDueSoon();
@@ -355,18 +357,32 @@ setSyncing = (v) => {
 };
 
 async function loadFromSupabase(){
-  const { data, error } = await sb.from('chits').select('*').limit(1).single();
-  if(error && error.code !== 'PGRST116'){ console.error(error); return; }
-  if(data){ DB = data.data; dbRowId = data.id; if(data.seq) DB.seq = data.seq; }
-  else { await sb.from('chits').insert({ data: DB }); const r = await sb.from('chits').select('id').single(); if(r.data) dbRowId = r.data.id; }
+  try {
+    const { data, error } = await sb.from('chits').select('*').limit(1).single();
+    if(error){ console.error('Load error:', error); return; }
+    if(data){
+      dbRowId = data.id;
+      // data.data is the jsonb column — could be array (old) or object (new)
+      if(Array.isArray(data.data)){
+        DB = { chits: data.data, seq: data.seq || 0 };
+      } else if(data.data && typeof data.data === 'object'){
+        DB = data.data;
+        if(!DB.chits) DB.chits = [];
+        if(!DB.seq) DB.seq = data.seq || 0;
+      }
+    }
+  } catch(e){ console.error('loadFromSupabase exception:', e); }
 }
 
 async function saveToSupabase(){
-  if(!dbRowId) return;
+  if(!dbRowId){ console.warn('No dbRowId — cannot save'); return; }
   setSyncing(true);
-  const { error } = await sb.from('chits').update({ data: DB, seq: DB.seq||0, updated_at: new Date().toISOString() }).eq('id', dbRowId);
+  try {
+    const payload = { data: DB, seq: DB.seq||0, updated_at: new Date().toISOString() };
+    const { error } = await sb.from('chits').update(payload).eq('id', dbRowId);
+    if(error){ console.error('Save error:', error); toast('Sync error: '+error.message, 'err'); }
+  } catch(e){ console.error('saveToSupabase exception:', e); }
   setSyncing(false);
-  if(error) toast('Sync error: '+error.message, 'err');
 }
 
 function subscribeRealtime(){
