@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -215,10 +215,10 @@ tr.rn td{background:rgba(180,83,9,0.06);}
 <body>
 
 <!-- LOADING -->
-<div id="loading-screen"><div class="spinner"></div></div>
+<div id="loading-screen" style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg)"><div class="spinner"></div></div>
 
 <!-- LOGIN -->
-<div id="login-screen" style="display:none">
+<div id="login-screen" style="display:none;align-items:center;justify-content:center;min-height:100vh;background:var(--bg)">
   <div class="login-card">
     <div class="login-logo">Chit<span>Track</span> Pro</div>
     <div class="login-sub">Sign in to manage your chit funds</div>
@@ -315,9 +315,20 @@ let dbRowId = null; // the single row id in supabase
 
 // ─── AUTH ────────────────────────────────────────────────────────
 async function init(){
-  const { data:{ session } } = await sb.auth.getSession();
-  if(session){ await startApp(); }
-  else { show('login-screen'); hide('loading-screen'); }
+  try {
+    const { data, error } = await sb.auth.getSession();
+    console.log('Session check:', data, error);
+    if(data && data.session){
+      await startApp();
+    } else {
+      hide('loading-screen');
+      show('login-screen');
+    }
+  } catch(e){
+    console.error('Init error:', e);
+    hide('loading-screen');
+    show('login-screen');
+  }
 }
 
 async function doLogin(){
@@ -398,7 +409,11 @@ function subscribeRealtime(){
 }
 
 // ─── HELPERS ─────────────────────────────────────────────────────
-function show(id){ document.getElementById(id).style.display = ''; }
+function show(id){
+  const el = document.getElementById(id);
+  // login-screen needs flex to center content
+  el.style.display = (id === 'login-screen') ? 'flex' : '';
+}
 function hide(id){ document.getElementById(id).style.display = 'none'; }
 function fN(n){ if(n==null)return'0'; const a=Math.abs(n); return(n<0?'-':'')+a.toLocaleString('en-IN'); }
 function sPill(s){
