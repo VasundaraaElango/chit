@@ -439,12 +439,27 @@ function monthlyDue(c){ return Math.round(c.amount/c.totalMonths); }
 function calcDividend(c,bid){ return Math.max(0,Math.round((c.amount-bid-(c.commission||0))/c.members)); }
 
 function recomputeInstallments(c){
-  const base=monthlyDue(c); let pending=0;
-  c.installments.forEach(inst=>{
-    const deduct=Math.min(pending,base);
-    inst.amountDue=base-deduct; pending=Math.max(0,pending-deduct);
-    if(inst.bidAmount>0){ inst.dividend=calcDividend(c,inst.bidAmount); if(inst.paid) pending+=inst.dividend; }
-    else inst.dividend=0;
+  const base = monthlyDue(c);
+  let pending = 0;
+
+  c.installments.forEach(inst => {
+    // Step 1: Apply any pending profit to THIS month's due
+    const deduct = Math.min(pending, base);
+    inst.amountDue = base - deduct;
+    pending = Math.max(0, pending - deduct);
+
+    // Step 2: Calculate dividend for this month if there's a bid
+    if(inst.bidAmount > 0 && !inst.iWon){
+      // Someone else won — dividend is split among all members including us
+      inst.dividend = calcDividend(c, inst.bidAmount);
+      // Only carry forward after this month is paid
+      if(inst.paid) pending += inst.dividend;
+    } else if(inst.bidAmount > 0 && inst.iWon){
+      // We won — we get the prize, no dividend for us this month
+      inst.dividend = 0;
+    } else {
+      inst.dividend = 0;
+    }
   });
 }
 
