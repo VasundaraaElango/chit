@@ -276,7 +276,8 @@ tr.rn td{background:rgba(180,83,9,0.06);}
   <!-- HOME -->
   <div class="page active" id="page-home">
     <div style="padding:26px 28px 60px;max-width:1280px;margin:0 auto">
-      <div class="home-greeting"> Welcome back!</div>
+      <div class="home-greeting">👋 Welcome back!</div>
+      <div class="home-sub">Your family finances, all in one place.</div>
       <div class="due-banner" id="due-banner"><strong>🔔 Upcoming Payments (within 30 days)</strong><div id="due-items"></div></div>
       <div class="home-tiles" id="home-tiles"></div>
       <div style="text-align:right;margin-top:8px">
@@ -358,13 +359,15 @@ tr.rn td{background:rgba(180,83,9,0.06);}
             <option value="other">Other</option>
           </select>
         </div>
-        <div class="fgroup"><label>Insurer / Provider</label><input class="finp" id="if-provider" placeholder="e.g. Star Health, LIC"></div>
-        <div class="fgroup"><label>Policy Number</label><input class="finp" id="if-policyno" placeholder="Policy number"></div>
-        <div class="fgroup"><label>Insured Person(s)</label><input class="finp" id="if-person" placeholder="e.g. Dad, Mom, Self"></div>
-        <div class="fgroup"><label>Sum Insured (₹)</label><input class="finp" type="number" id="if-suminsured" placeholder="500000"></div>
-        <div class="fgroup"><label>Premium Amount (₹) *</label><input class="finp" type="number" id="if-premium" placeholder="12000"></div>
+        <div class="fgroup"><label>Insurance Company</label><input class="finp" id="if-provider" placeholder="e.g. Star Health, LIC, HDFC Ergo"></div>
+        <div class="fgroup"><label>Policy Number</label><input class="finp" id="if-policyno" placeholder="Policy number from document"></div>
+        <div class="fgroup ffull"><label>Who is Covered</label><input class="finp" id="if-person" placeholder="e.g. Dad, Mom, Self, Whole family"></div>
         <div class="fgroup">
-          <label>Frequency *</label>
+          <label>Coverage Amount (₹) <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted2)">(what insurance pays if claimed)</span></label>
+          <input class="finp" type="number" id="if-suminsured" placeholder="e.g. 500000">
+        </div>
+        <div class="fgroup">
+          <label>Payment Frequency</label>
           <select class="finp" id="if-freq">
             <option value="monthly">Monthly</option>
             <option value="quarterly">Quarterly</option>
@@ -372,9 +375,7 @@ tr.rn td{background:rgba(180,83,9,0.06);}
             <option value="yearly" selected>Yearly</option>
           </select>
         </div>
-        <div class="fgroup"><label>Next Due Date *</label><input class="finp" type="date" id="if-due"></div>
-        <div class="fgroup"><label>Renewal Date</label><input class="finp" type="date" id="if-renewal"></div>
-        <div class="fgroup ffull"><label>Notes</label><input class="finp" id="if-notes" placeholder="Any extra info..."></div>
+        <div class="fgroup ffull"><label>Notes</label><input class="finp" id="if-notes" placeholder="Any extra info — vehicle number, agent name, etc."></div>
       </div>
     </div>
     <div class="mft"><button class="btn btn-ghost" onclick="closeModal('ins-modal')">Cancel</button><button class="btn btn-green" onclick="saveIns()">Save Policy</button></div>
@@ -419,8 +420,41 @@ tr.rn td{background:rgba(180,83,9,0.06);}
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<!-- INSURANCE PAYMENT MODAL -->
+<div class="overlay" id="ins-payment-modal">
+  <div class="modal">
+    <div class="mhd"><h2>Add Payment Entry</h2><button class="mx" onclick="closeModal('ins-payment-modal')">×</button></div>
+    <div class="mbody">
+      <div class="fg">
+        <div class="fgroup"><label>Due Date *</label><input class="finp" type="date" id="ip-due"></div>
+        <div class="fgroup"><label>Amount Due (₹) *</label><input class="finp" type="number" id="ip-amtdue" placeholder="e.g. 12500"></div>
+        <div class="fgroup"><label>Amount Paid (₹)</label><input class="finp" type="number" id="ip-amtpaid" placeholder="Fill when paid"></div>
+        <div class="fgroup"><label>Date Paid</label><input class="finp" type="date" id="ip-paiddate"></div>
+        <div class="fgroup ffull"><label>Notes</label><input class="finp" id="ip-notes" placeholder="e.g. Paid via HDFC netbanking"></div>
+      </div>
+    </div>
+    <div class="mft"><button class="btn btn-ghost" onclick="closeModal('ins-payment-modal')">Cancel</button><button class="btn btn-green" onclick="saveInsPayment()">Save</button></div>
+  </div>
+</div>
 
+<!-- TAX PAYMENT MODAL -->
+<div class="overlay" id="tax-payment-modal">
+  <div class="modal">
+    <div class="mhd"><h2>Add Payment Entry</h2><button class="mx" onclick="closeModal('tax-payment-modal')">×</button></div>
+    <div class="mbody">
+      <div class="fg">
+        <div class="fgroup"><label>Due Date *</label><input class="finp" type="date" id="tp-due"></div>
+        <div class="fgroup"><label>Amount Due (₹) *</label><input class="finp" type="number" id="tp-amtdue" placeholder="e.g. 5000"></div>
+        <div class="fgroup"><label>Amount Paid (₹)</label><input class="finp" type="number" id="tp-amtpaid" placeholder="Fill when paid"></div>
+        <div class="fgroup"><label>Date Paid</label><input class="finp" type="date" id="tp-paiddate"></div>
+        <div class="fgroup ffull"><label>Notes</label><input class="finp" id="tp-notes" placeholder="e.g. Paid at corporation office"></div>
+      </div>
+    </div>
+    <div class="mft"><button class="btn btn-ghost" onclick="closeModal('tax-payment-modal')">Cancel</button><button class="btn btn-sm" style="background:var(--orange);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;padding:9px 18px" onclick="saveTaxPayment()">Save</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
 <script>
 // ─── SUPABASE ────────────────────────────────────────────────────
 const SUPA_URL = 'https://srmuwrljtdhylbnaupbr.supabase.co';
@@ -588,18 +622,20 @@ function checkDueSoon(){
 
   // Insurance
   (DB.insurance||[]).forEach(ins=>{
-    if(!ins.dueDate) return;
-    const due=new Date(ins.dueDate); due.setHours(0,0,0,0);
+    const next=ins.payments&&ins.payments.find(p=>!p.paid);
+    if(!next||!next.dueDate) return;
+    const due=new Date(next.dueDate); due.setHours(0,0,0,0);
     const diff=Math.round((due-today)/(1000*60*60*24));
-    if(diff<=30&&diff>=0) items.push({label:`Insurance: ${ins.name}`,date:ins.dueDate,amt:ins.premium,diff,icon:'🛡️'});
+    if(diff<=30&&diff>=0) items.push({label:`Insurance: ${ins.name}`,date:next.dueDate,amt:next.amountDue,diff,icon:'🛡️'});
   });
 
   // Tax
   (DB.taxes||[]).forEach(tax=>{
-    if(!tax.dueDate) return;
-    const due=new Date(tax.dueDate); due.setHours(0,0,0,0);
+    const next=tax.payments&&tax.payments.find(p=>!p.paid);
+    if(!next||!next.dueDate) return;
+    const due=new Date(next.dueDate); due.setHours(0,0,0,0);
     const diff=Math.round((due-today)/(1000*60*60*24));
-    if(diff<=30&&diff>=0) items.push({label:`Tax: ${tax.name}`,date:tax.dueDate,amt:tax.amount,diff,icon:'🏛️'});
+    if(diff<=30&&diff>=0) items.push({label:`Tax: ${tax.name}`,date:next.dueDate,amt:next.amountDue,diff,icon:'🏛️'});
   });
 
   items.sort((a,b)=>a.diff-b.diff);
@@ -648,17 +684,21 @@ function exportCalendar(){
   });
 
   (DB.insurance||[]).forEach(ins=>{
-    if(!ins.dueDate) return;
-    addEvent(`ins-${ins.id}@ff`,ins.dueDate,
-      `Insurance: ${ins.name} — ₹${fN(ins.premium)}`,
-      `Policy: ${ins.name}\\nProvider: ${ins.provider||''}\\nPremium: ₹${fN(ins.premium)}`);
+    (ins.payments||[]).forEach((p,i)=>{
+      if(p.paid||!p.dueDate) return;
+      addEvent(`ins-${ins.id}-p${i}@ff`,p.dueDate,
+        `Insurance: ${ins.name} — ₹${fN(p.amountDue)}`,
+        `Policy: ${ins.name}\\nProvider: ${ins.provider||''}\\nAmount Due: ₹${fN(p.amountDue)}`);
+    });
   });
 
   (DB.taxes||[]).forEach(tax=>{
-    if(!tax.dueDate) return;
-    addEvent(`tax-${tax.id}@ff`,tax.dueDate,
-      `Tax: ${tax.name} — ₹${fN(tax.amount)}`,
-      `Tax: ${tax.name}\\nAmount: ₹${fN(tax.amount)}\\nOffice: ${tax.office||''}`);
+    (tax.payments||[]).forEach((p,i)=>{
+      if(p.paid||!p.dueDate) return;
+      addEvent(`tax-${tax.id}-p${i}@ff`,p.dueDate,
+        `Tax: ${tax.name} — ₹${fN(p.amountDue)}`,
+        `Tax: ${tax.name}\\nAmount: ₹${fN(p.amountDue)}\\nOffice: ${tax.office||''}`);
+    });
   });
 
   lines.push('END:VCALENDAR');
@@ -888,37 +928,88 @@ async function deleteChit(cid){
 function renderInsPage(){
   const ins=DB.insurance||[];
   document.getElementById('ins-cnt').textContent=ins.length;
-  const totalPremium=ins.reduce((s,i)=>s+(i.premium||0),0);
+  const totalPremium=ins.reduce((s,i)=>{
+    const last=i.payments&&i.payments.length?i.payments[i.payments.length-1]:null;
+    return s+(last?last.amountPaid||last.amountDue||0:i.premium||0);
+  },0);
   const today=new Date(); today.setHours(0,0,0,0);
-  const due30=ins.filter(i=>{ if(!i.dueDate)return false; const d=new Date(i.dueDate); d.setHours(0,0,0,0); const diff=Math.round((d-today)/(1000*60*60*24)); return diff>=0&&diff<=30; }).length;
+  const due30=ins.filter(i=>{
+    const next=i.payments&&i.payments.find(p=>!p.paid);
+    if(!next||!next.dueDate) return false;
+    const d=new Date(next.dueDate); d.setHours(0,0,0,0);
+    const diff=Math.round((d-today)/(1000*60*60*24));
+    return diff>=0&&diff<=30;
+  }).length;
 
   document.getElementById('ins-strip').innerHTML=`
     <div class="scell c-green"><div class="sl">Total Policies</div><div class="sv">${ins.length}</div></div>
-    <div class="scell c-blue"><div class="sl">Annual Premium</div><div class="sv c-blue">₹${fN(totalPremium)}</div></div>
+    <div class="scell c-blue"><div class="sl">Latest Premium Total</div><div class="sv c-blue">₹${fN(totalPremium)}</div></div>
     <div class="scell c-${due30>0?'red':'green'}"><div class="sl">Due in 30 Days</div><div class="sv c-${due30>0?'red':'green'}">${due30}</div><div class="ss">renewals upcoming</div></div>`;
 
   const grid=document.getElementById('ins-grid');
   if(!ins.length){ grid.innerHTML='<div class="empty"><div class="empty-icon">🛡️</div><p>No policies yet. Click <strong>+ Add Policy</strong> to begin.</p></div>'; return; }
-  grid.innerHTML=ins.map(i=>{
-    const dp=duePill(i.dueDate);
-    return`<div class="card">
+
+  grid.innerHTML=ins.map(pol=>{
+    const payments=pol.payments||[];
+    const nextDue=payments.find(p=>!p.paid);
+    const dp=nextDue?duePill(nextDue.dueDate):`<span style="color:var(--muted2);font-size:12px">No upcoming payment</span>`;
+
+    const historyRows=payments.length?payments.map((p,pidx)=>`
+      <tr style="background:${p.paid?'rgba(22,163,74,0.04)':''}">
+        <td style="font-size:12px;color:var(--muted)">${p.dueDate||'—'}</td>
+        <td style="font-family:JetBrains Mono,monospace">₹${fN(p.amountDue)}</td>
+        <td style="font-family:JetBrains Mono,monospace;color:${p.amountPaid?'var(--green)':'var(--muted2)'}">
+          ${p.paid?'₹'+fN(p.amountPaid):'—'}
+        </td>
+        <td style="font-size:12px;color:var(--muted)">${p.paidDate||'—'}</td>
+        <td>
+          <button class="ck ${p.paid?'on':''}" onclick="insTogglePaid('${pol.id}',${pidx})">${p.paid?'✓':''}</button>
+        </td>
+        <td style="font-size:12px;color:var(--muted)">${p.notes||''}</td>
+        <td><button onclick="deleteInsPayment('${pol.id}',${pidx})" style="background:none;border:none;cursor:pointer;color:var(--muted2);font-size:14px">×</button></td>
+      </tr>`).join('')
+    :`<tr><td colspan="7" style="text-align:center;color:var(--muted2);font-size:12px;padding:12px">No payment history yet</td></tr>`;
+
+    return`<div class="card" style="grid-column:1/-1">
       <div class="card-top">
-        <div><div class="card-name">${i.name}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${i.provider||''}</div></div>
-        <span class="card-type ${i.type||'other'}">${typeLabel(i.type)}</span>
+        <div>
+          <div class="card-name">${pol.name}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">${pol.provider||''} ${pol.policyNo?'· '+pol.policyNo:''}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="card-type ${pol.type||'other'}">${typeLabel(pol.type)}</span>
+          <button class="btn btn-ghost btn-sm" onclick="openInsModal('${pol.id}')">✏️ Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteIns('${pol.id}')">🗑</button>
+        </div>
       </div>
-      <div class="card-rows">
-        ${i.person?`<div class="card-row"><span class="card-row-label">Insured</span><span class="card-row-val" style="font-family:Inter,sans-serif">${i.person}</span></div>`:''}
-        ${i.policyNo?`<div class="card-row"><span class="card-row-label">Policy No</span><span class="card-row-val">${i.policyNo}</span></div>`:''}
-        ${i.sumInsured?`<div class="card-row"><span class="card-row-label">Sum Insured</span><span class="card-row-val">₹${fN(i.sumInsured)}</span></div>`:''}
-        <div class="card-row"><span class="card-row-label">Premium</span><span class="card-row-val">₹${fN(i.premium)} / ${i.freq||'yearly'}</span></div>
-        <div class="card-row"><span class="card-row-label">Next Due</span><span>${dp}</span></div>
-        ${i.renewal?`<div class="card-row"><span class="card-row-label">Renewal</span><span class="card-row-val">${i.renewal}</span></div>`:''}
-        ${i.notes?`<div class="card-row"><span class="card-row-label">Notes</span><span style="font-size:12px;color:var(--muted)">${i.notes}</span></div>`:''}
+
+      <!-- Policy details -->
+      <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:14px;padding:10px 14px;background:var(--surface2);border-radius:var(--radius-sm)">
+        ${pol.person?`<div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Insured</div><div style="font-size:13px;font-weight:600">${pol.person}</div></div>`:''}
+        ${pol.sumInsured?`<div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Sum Insured</div><div style="font-family:JetBrains Mono,monospace;font-size:13px;font-weight:700">₹${fN(pol.sumInsured)}</div></div>`:''}
+        <div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Frequency</div><div style="font-size:13px;font-weight:600">${pol.freq||'Yearly'}</div></div>
+        <div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Next Due</div><div>${dp}</div></div>
+        ${nextDue?`<div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Amount Due</div><div style="font-family:JetBrains Mono,monospace;font-size:13px;font-weight:700;color:var(--orange)">₹${fN(nextDue.amountDue)}</div></div>`:''}
+        ${pol.notes?`<div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Notes</div><div style="font-size:12px;color:var(--muted)">${pol.notes}</div></div>`:''}
       </div>
-      <div class="card-actions">
-        <button class="btn btn-ghost btn-sm" onclick="openInsModal('${i.id}')">✏️ Edit</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteIns('${i.id}')">🗑</button>
+
+      <!-- Payment history table -->
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:8px">Payment History</div>
+      <div style="overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:12px">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead><tr style="background:var(--surface2)">
+            <th style="text-align:left;padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Due Date</th>
+            <th style="text-align:left;padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Amount Due</th>
+            <th style="text-align:left;padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Amount Paid</th>
+            <th style="text-align:left;padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Paid Date</th>
+            <th style="text-align:left;padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Paid?</th>
+            <th style="text-align:left;padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Notes</th>
+            <th style="border-bottom:1px solid var(--border)"></th>
+          </tr></thead>
+          <tbody>${historyRows}</tbody>
+        </table>
       </div>
+      <button class="btn btn-ghost btn-sm" onclick="openInsPaymentModal('${pol.id}')">＋ Add Payment Entry</button>
     </div>`;
   }).join('');
 }
@@ -927,34 +1018,83 @@ function renderInsPage(){
 function renderTaxPage(){
   const taxes=DB.taxes||[];
   document.getElementById('tax-cnt').textContent=taxes.length;
-  const totalAmt=taxes.reduce((s,t)=>s+(t.amount||0),0);
+  const totalAmt=taxes.reduce((s,t)=>{
+    const next=t.payments&&t.payments.find(p=>!p.paid);
+    return s+(next?next.amountDue||0:t.amount||0);
+  },0);
   const today=new Date(); today.setHours(0,0,0,0);
-  const due30=taxes.filter(t=>{ if(!t.dueDate)return false; const d=new Date(t.dueDate); d.setHours(0,0,0,0); const diff=Math.round((d-today)/(1000*60*60*24)); return diff>=0&&diff<=30; }).length;
+  const due30=taxes.filter(t=>{
+    const next=t.payments&&t.payments.find(p=>!p.paid);
+    if(!next||!next.dueDate) return false;
+    const d=new Date(next.dueDate); d.setHours(0,0,0,0);
+    return Math.round((d-today)/(1000*60*60*24))<=30;
+  }).length;
 
   document.getElementById('tax-strip').innerHTML=`
     <div class="scell c-orange"><div class="sl">Total Items</div><div class="sv">${taxes.length}</div></div>
-    <div class="scell c-blue"><div class="sl">Total Amount</div><div class="sv c-blue">₹${fN(totalAmt)}</div></div>
+    <div class="scell c-blue"><div class="sl">Upcoming Amount</div><div class="sv c-blue">₹${fN(totalAmt)}</div></div>
     <div class="scell c-${due30>0?'red':'green'}"><div class="sl">Due in 30 Days</div><div class="sv c-${due30>0?'red':'green'}">${due30}</div></div>`;
 
   const grid=document.getElementById('tax-grid');
   if(!taxes.length){ grid.innerHTML='<div class="empty"><div class="empty-icon">🏛️</div><p>No taxes yet. Click <strong>+ Add Tax</strong> to begin.</p></div>'; return; }
-  grid.innerHTML=taxes.map(t=>{
-    const dp=duePill(t.dueDate);
-    return`<div class="card">
+
+  grid.innerHTML=taxes.map(tax=>{
+    const payments=tax.payments||[];
+    const nextDue=payments.find(p=>!p.paid);
+    const dp=nextDue?duePill(nextDue.dueDate):`<span style="color:var(--muted2);font-size:12px">No upcoming payment</span>`;
+
+    const historyRows=payments.length?payments.map((p,pidx)=>`
+      <tr style="background:${p.paid?'rgba(22,163,74,0.04)':''}">
+        <td style="font-size:12px;color:var(--muted)">${p.dueDate||'—'}</td>
+        <td style="font-family:JetBrains Mono,monospace">₹${fN(p.amountDue)}</td>
+        <td style="font-family:JetBrains Mono,monospace;color:${p.amountPaid?'var(--green)':'var(--muted2)'}">
+          ${p.paid?'₹'+fN(p.amountPaid):'—'}
+        </td>
+        <td style="font-size:12px;color:var(--muted)">${p.paidDate||'—'}</td>
+        <td>
+          <button class="ck ${p.paid?'on':''}" onclick="taxTogglePaid('${tax.id}',${pidx})">${p.paid?'✓':''}</button>
+        </td>
+        <td style="font-size:12px;color:var(--muted)">${p.notes||''}</td>
+        <td><button onclick="deleteTaxPayment('${tax.id}',${pidx})" style="background:none;border:none;cursor:pointer;color:var(--muted2);font-size:14px">×</button></td>
+      </tr>`).join('')
+    :`<tr><td colspan="7" style="text-align:center;color:var(--muted2);font-size:12px;padding:12px">No payment history yet</td></tr>`;
+
+    return`<div class="card" style="grid-column:1/-1">
       <div class="card-top">
-        <div><div class="card-name">${t.name}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${t.office||''}</div></div>
-        <span class="card-type ${t.type||'other'}">${taxTypeLabel(t.type)}</span>
+        <div>
+          <div class="card-name">${tax.name}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">${tax.office||''} ${tax.assessNo?'· Ref: '+tax.assessNo:''}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="card-type ${tax.type||'other'}">${taxTypeLabel(tax.type)}</span>
+          <button class="btn btn-ghost btn-sm" onclick="openTaxModal('${tax.id}')">✏️ Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteTax('${tax.id}')">🗑</button>
+        </div>
       </div>
-      <div class="card-rows">
-        <div class="card-row"><span class="card-row-label">Amount</span><span class="card-row-val">₹${fN(t.amount)} / ${t.freq||'yearly'}</span></div>
-        <div class="card-row"><span class="card-row-label">Next Due</span><span>${dp}</span></div>
-        ${t.assessNo?`<div class="card-row"><span class="card-row-label">Ref No</span><span class="card-row-val">${t.assessNo}</span></div>`:''}
-        ${t.notes?`<div class="card-row"><span class="card-row-label">Notes</span><span style="font-size:12px;color:var(--muted)">${t.notes}</span></div>`:''}
+
+      <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:14px;padding:10px 14px;background:var(--surface2);border-radius:var(--radius-sm)">
+        <div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Frequency</div><div style="font-size:13px;font-weight:600">${tax.freq||'Yearly'}</div></div>
+        <div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Next Due</div><div>${dp}</div></div>
+        ${nextDue?`<div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Amount Due</div><div style="font-family:JetBrains Mono,monospace;font-size:13px;font-weight:700;color:var(--orange)">₹${fN(nextDue.amountDue)}</div></div>`:''}
+        ${tax.notes?`<div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Notes</div><div style="font-size:12px;color:var(--muted)">${tax.notes}</div></div>`:''}
       </div>
-      <div class="card-actions">
-        <button class="btn btn-ghost btn-sm" onclick="openTaxModal('${t.id}')">✏️ Edit</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteTax('${t.id}')">🗑</button>
+
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:8px">Payment History</div>
+      <div style="overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:12px">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead><tr style="background:var(--surface2)">
+            <th style="text-align:left;padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Due Date</th>
+            <th style="text-align:left;padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Amount Due</th>
+            <th style="text-align:left;padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Amount Paid</th>
+            <th style="text-align:left;padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Paid Date</th>
+            <th style="text-align:left;padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Paid?</th>
+            <th style="text-align:left;padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Notes</th>
+            <th style="border-bottom:1px solid var(--border)"></th>
+          </tr></thead>
+          <tbody>${historyRows}</tbody>
+        </table>
       </div>
+      <button class="btn btn-ghost btn-sm" onclick="openTaxPaymentModal('${tax.id}')">＋ Add Payment Entry</button>
     </div>`;
   }).join('');
 }
@@ -1007,32 +1147,35 @@ function openInsModal(id){
     document.getElementById('if-policyno').value=i.policyNo||'';
     document.getElementById('if-person').value=i.person||'';
     document.getElementById('if-suminsured').value=i.sumInsured||'';
-    document.getElementById('if-premium').value=i.premium||'';
     document.getElementById('if-freq').value=i.freq||'yearly';
-    document.getElementById('if-due').value=i.dueDate||'';
-    document.getElementById('if-renewal').value=i.renewal||'';
     document.getElementById('if-notes').value=i.notes||'';
   } else {
-    ['if-name','if-provider','if-policyno','if-person','if-suminsured','if-premium','if-due','if-renewal','if-notes'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('if-type').value='health'; document.getElementById('if-freq').value='yearly';
+    ['if-name','if-provider','if-policyno','if-person','if-suminsured','if-notes'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('if-type').value='health';
+    document.getElementById('if-freq').value='yearly';
   }
   openModal('ins-modal');
 }
 
 async function saveIns(){
   const name=document.getElementById('if-name').value.trim();
-  const premium=parseFloat(document.getElementById('if-premium').value);
-  const dueDate=document.getElementById('if-due').value;
-  if(!name||!premium||!dueDate){ toast('Fill all required fields','err'); return; }
+  if(!name){ toast('Policy name is required','err'); return; }
   if(!DB.insurance) DB.insurance=[];
-  const obj={ id:editInsId||('INS-'+Date.now()), name, type:document.getElementById('if-type').value,
-    provider:document.getElementById('if-provider').value, policyNo:document.getElementById('if-policyno').value,
-    person:document.getElementById('if-person').value, sumInsured:parseFloat(document.getElementById('if-suminsured').value)||0,
-    premium, freq:document.getElementById('if-freq').value, dueDate,
-    renewal:document.getElementById('if-renewal').value, notes:document.getElementById('if-notes').value };
+  const obj={
+    id: editInsId||('INS-'+Date.now()),
+    name,
+    type: document.getElementById('if-type').value,
+    provider: document.getElementById('if-provider').value,
+    policyNo: document.getElementById('if-policyno').value,
+    person: document.getElementById('if-person').value,
+    sumInsured: parseFloat(document.getElementById('if-suminsured').value)||0,
+    freq: document.getElementById('if-freq').value,
+    notes: document.getElementById('if-notes').value,
+    payments: editInsId ? (DB.insurance.find(x=>x.id===editInsId)?.payments||[]) : []
+  };
   if(editInsId){ const i=DB.insurance.findIndex(x=>x.id===editInsId); if(i>=0) DB.insurance[i]=obj; }
   else DB.insurance.push(obj);
-  await saveDB(); closeModal('ins-modal'); renderInsPage(); renderHome(); checkDueSoon();
+  await saveDB(); closeModal('ins-modal'); renderInsPage(); renderHome();
   toast(editInsId?'Policy updated ✓':'Policy added ✓','ok'); editInsId=null;
 }
 
@@ -1124,6 +1267,83 @@ function duePill(dateStr){
 
 function typeLabel(t){ return({health:'Health',vehicle:'Vehicle',life:'Life',other:'Other'})[t]||'Other'; }
 function taxTypeLabel(t){ return({property:'Property',municipal:'Municipal',vehicle:'Vehicle Tax',income:'Income Tax',other:'Other'})[t]||'Other'; }
+
+// ─── INSURANCE PAYMENT ACTIONS ───────────────────────────────────
+let currentInsPaymentId = null;
+let currentTaxPaymentId = null;
+
+function openInsPaymentModal(polId){
+  currentInsPaymentId = polId;
+  ['ip-due','ip-amtdue','ip-amtpaid','ip-paiddate','ip-notes'].forEach(id=>document.getElementById(id).value='');
+  openModal('ins-payment-modal');
+}
+
+async function saveInsPayment(){
+  const dueDate=document.getElementById('ip-due').value;
+  const amtDue=parseFloat(document.getElementById('ip-amtdue').value);
+  if(!dueDate||!amtDue){ toast('Due date and amount are required','err'); return; }
+  const pol=DB.insurance.find(x=>x.id===currentInsPaymentId); if(!pol)return;
+  if(!pol.payments) pol.payments=[];
+  const amtPaid=parseFloat(document.getElementById('ip-amtpaid').value)||0;
+  const paidDate=document.getElementById('ip-paiddate').value;
+  pol.payments.push({ dueDate, amountDue:amtDue, amountPaid:amtPaid||0, paidDate, paid:!!(amtPaid&&paidDate), notes:document.getElementById('ip-notes').value });
+  pol.payments.sort((a,b)=>a.dueDate>b.dueDate?1:-1);
+  await saveDB(); closeModal('ins-payment-modal'); renderInsPage(); checkDueSoon();
+  toast('Payment entry added ✓','ok');
+}
+
+async function insTogglePaid(polId, pidx){
+  const pol=DB.insurance.find(x=>x.id===polId); if(!pol||!pol.payments[pidx])return;
+  const p=pol.payments[pidx];
+  p.paid=!p.paid;
+  if(p.paid && !p.paidDate) p.paidDate=new Date().toISOString().split('T')[0];
+  if(p.paid && !p.amountPaid) p.amountPaid=p.amountDue;
+  await saveDB(); renderInsPage(); checkDueSoon();
+  toast(p.paid?'✓ Marked as paid':'Unmarked','ok');
+}
+
+async function deleteInsPayment(polId, pidx){
+  const pol=DB.insurance.find(x=>x.id===polId); if(!pol)return;
+  pol.payments.splice(pidx,1);
+  await saveDB(); renderInsPage(); toast('Entry deleted','');
+}
+
+// ─── TAX PAYMENT ACTIONS ─────────────────────────────────────────
+function openTaxPaymentModal(taxId){
+  currentTaxPaymentId=taxId;
+  ['tp-due','tp-amtdue','tp-amtpaid','tp-paiddate','tp-notes'].forEach(id=>document.getElementById(id).value='');
+  openModal('tax-payment-modal');
+}
+
+async function saveTaxPayment(){
+  const dueDate=document.getElementById('tp-due').value;
+  const amtDue=parseFloat(document.getElementById('tp-amtdue').value);
+  if(!dueDate||!amtDue){ toast('Due date and amount are required','err'); return; }
+  const tax=DB.taxes.find(x=>x.id===currentTaxPaymentId); if(!tax)return;
+  if(!tax.payments) tax.payments=[];
+  const amtPaid=parseFloat(document.getElementById('tp-amtpaid').value)||0;
+  const paidDate=document.getElementById('tp-paiddate').value;
+  tax.payments.push({ dueDate, amountDue:amtDue, amountPaid:amtPaid||0, paidDate, paid:!!(amtPaid&&paidDate), notes:document.getElementById('tp-notes').value });
+  tax.payments.sort((a,b)=>a.dueDate>b.dueDate?1:-1);
+  await saveDB(); closeModal('tax-payment-modal'); renderTaxPage(); checkDueSoon();
+  toast('Payment entry added ✓','ok');
+}
+
+async function taxTogglePaid(taxId, pidx){
+  const tax=DB.taxes.find(x=>x.id===taxId); if(!tax||!tax.payments[pidx])return;
+  const p=tax.payments[pidx];
+  p.paid=!p.paid;
+  if(p.paid && !p.paidDate) p.paidDate=new Date().toISOString().split('T')[0];
+  if(p.paid && !p.amountPaid) p.amountPaid=p.amountDue;
+  await saveDB(); renderTaxPage(); checkDueSoon();
+  toast(p.paid?'✓ Marked as paid':'Unmarked','ok');
+}
+
+async function deleteTaxPayment(taxId, pidx){
+  const tax=DB.taxes.find(x=>x.id===taxId); if(!tax)return;
+  tax.payments.splice(pidx,1);
+  await saveDB(); renderTaxPage(); toast('Entry deleted','');
+}
 
 // ─── BOOT ────────────────────────────────────────────────────────
 init();
